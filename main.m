@@ -1,16 +1,19 @@
 % 参数：数据文件夹名称 过程 画图选项
+% 参数说明：
 %     过程 -- ALL 所有
 %             SET 过程
 %             RESET 过程
 %     画图选项 -- 1-9999 第 n 个数据图像
 %                inf 全部
-% [I_raw, V_raw, Discontinuity] = main('foldername', 'SET'); % 尽导出原始数据
-% main('C:\Users\hyx3179\Documents\MATLAB\20210318', 'ALL', 1)
+%% 使用方法
+% [I_raw, V_raw, Discontinuity] = main('foldername', 'SET'); % 仅导出原始数据
+% main('foldername', 'ALL', 1)
 % main('20210318', 1, 0);
 
 % datetime('20210318-211027', 'InputFormat', 'yyyyMMdd-HHmmss')
 
-function [I_raw, V_raw, Discontinuity] = main(foldername, varargin)
+%%
+function [varargout] = main(foldername, varargin)
 if nargin < 2
     error(message('MATLAB:narginchk:notEnoughInputs'));
 elseif nargin > 4
@@ -28,9 +31,18 @@ else
     cd(main_foldername)
     save([foldername foldername(end-8:end) '.mat'], 'filename')
 end
+%% 调用功能
 switch nargin
     case 2
         [I_raw, V_raw, Discontinuity] = raed_raw(foldername, filename, varargin{1});
+    case 3
+        [I_raw, V_raw, Discontinuity] = raed_raw(foldername, filename, varargin{1});
+        Drawing(V_raw, I_raw, Discontinuity, varargin{2})
+end
+if nargout
+    varargout{1} = I_raw;
+    varargout{2} = V_raw;
+    varargout{3} = Discontinuity;
 end
 end
 
@@ -72,7 +84,7 @@ data = abs(diff(cache));
 [~, Discontinuity] = max(data);
 end
 
-function Drawing(V_raw, I_raw)
+function Drawing(V_raw, I_raw, Discontinuity, n)
 %% 画图
 % Amount_of_file = size(I_raw, 2);
 % Amount_of_file = 5;
@@ -82,11 +94,11 @@ function Drawing(V_raw, I_raw)
 %   plot(V_raw(:, ii), I_raw(:, ii), 'k')
 % end
 % figure
-
-if Drawing < inf
-    semilogy(V_raw(:, Drawing), abs(I_raw(:, Drawing)), 'k')
+jj = length(Discontinuity);
+if n < inf
+    semilogy(V_raw(:, n), abs(I_raw(:, n)), 'k')
     hold on
-    scatter(V_raw(Discontinuity(Drawing), Drawing), abs(I_raw(Discontinuity(Drawing), Drawing)), 'r')
+    scatter(V_raw(Discontinuity(n), n), abs(I_raw(Discontinuity(n), n)), 'r')
 else
     semilogy(V_raw(:, 1), abs(I_raw(:, 1)), 'k')
     hold on
