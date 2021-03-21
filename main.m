@@ -59,11 +59,12 @@ end
 V_raw = V_raw(1:Max_amount_of_data,1:jj);
 I_raw = I_raw(1:Max_amount_of_data,1:jj);
 %% 寻找突变点
+cache = I_raw;
 for ii =1:jj
-    x = find(I_raw(:,ii) == inf);
-    I_raw(x,ii) = I_raw(x(1) - 1, ii);
+    x = find(cache(:,ii) == inf);
+    cache(x,ii) = cache(x(1) - 1, ii);
 end
-data = abs(diff(I_raw));
+data = abs(diff(cache));
 [~, Discontinuity] = max(data);
 end
 
