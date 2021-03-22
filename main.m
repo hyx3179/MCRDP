@@ -6,10 +6,12 @@
 %     数据选择 -- 1-9999 第 n 个数据
 %                 inf 全部（仅画图）
 %     选项 -- Delete 删除选择的数据
+%             Log/Linear 坐标轴选项
+%             Modify 修改突变点
 %
 %% 使用方法
 % [I_raw, V_raw, Discontinuity] = main('foldername', 'SET'); % 仅导出原始数据
-% main('foldername', 'ALL', 7) % 画出所有数据中第 7 组数据
+% main('foldername', 'ALL', 7, 'Linear') % 纵坐标以线性模式画出所有数据中第 7 组数据
 % main('foldername', 'SET', 6, 'Delete') % 删除 SET过程 数据中第 6 组数据
 
 % datetime('20210318-211027', 'InputFormat', 'yyyyMMdd-HHmmss')
@@ -23,14 +25,24 @@ elseif nargin > 6
     error(message('MATLAB:narginchk:tooManyInputs'));
 end
 %% 调用功能
-switch nargin
-    case 2
+if ~(exist([foldername '\filename.mat'], 'file'))
+    raed_raw(foldername, 'ALL');
+end
+if nargin > 1
+    try
+        if ~(contains(varargin{3}, 'Delete'))
+            [I_raw, V_raw, Discontinuity] = raed_raw(foldername, varargin{1});
+        end
+    catch
         [I_raw, V_raw, Discontinuity] = raed_raw(foldername, varargin{1});
-    case 3
-        [I_raw, V_raw, Discontinuity] = raed_raw(foldername, varargin{1});
-        Drawing(V_raw, I_raw, Discontinuity, varargin{2})
-    otherwise
+    end
+end
+if nargin > 2
+    if contains(varargin{3}, 'Log') || contains(varargin{3}, 'Linear')
+        Drawing(V_raw, I_raw, Discontinuity, varargin{2}, varargin{3})
+    elseif contains(varargin{3}, 'Delete') || contains(varargin{3}, 'Modify')
         Edit_data(foldername, varargin{1}, varargin{2}, varargin{3})
+    end
 end
 if nargout
     varargout{1} = I_raw;
@@ -52,6 +64,9 @@ else
     cd(main_foldername)
     save([foldername '\filename.mat'], 'filename')
 end
+if exist([foldername '\Discontinuity.mat'], 'file')
+    load([foldername '\Discontinuity.mat'], 'Discontinuity')
+end
 %% 读取原始数据
 Amount_of_file = size(filename, 1);
 Max_amount_of_data = 2000;
@@ -62,12 +77,13 @@ end
 
 V_raw = zeros(Max_amount_of_data, Amount_of_file);
 I_raw = zeros(Max_amount_of_data, Amount_of_file);
+File_Number = zeros(Amount_of_file);
 jj = 0;
 for ii = 1:Amount_of_file
-    if contains(filename(ii, :), ['-' Process])
+    if contains(filename(ii, :), ['-' Process]) && ~(contains(filename(ii, :), 'set'))
         [~, V, I] = importfile([foldername '\' filename(ii, :)]);
-        
         jj = jj + 1;
+        File_Number(jj) = ii;
         V_raw(:, jj) = [V(1:round(length(V)/2)) ; ...
             ones(Max_amount_of_data-1-length(V), 1)*inf ; ...
             V(round(length(V)/2:end))];
@@ -78,10 +94,9 @@ for ii = 1:Amount_of_file
 end
 V_raw = V_raw(1:Max_amount_of_data, 1:jj);
 I_raw = I_raw(1:Max_amount_of_data, 1:jj);
-%% 寻找突变点
-if exist([foldername '\Discontinuity.mat'], 'file')
-    load([foldername '\Discontinuity.mat'], 'Discontinuity')
-else
+File_Number = File_Number(1:jj);
+if ~(exist('Discontinuity', 'var'))
+    %% 寻找突变点
     cache = I_raw;
     for ii =1:jj
         x = find(cache(:, ii) == inf);
@@ -91,9 +106,10 @@ else
     [~, Discontinuity] = max(data);
     save([foldername '\Discontinuity.mat'], 'Discontinuity')
 end
+Discontinuity = Discontinuity(File_Number);
 end
 
-function Drawing(V_raw, I_raw, Discontinuity, n)
+function Drawing(V_raw, I_raw, Discontinuity, n, Axis_type)
 %% 画图
 % Amount_of_file = size(I_raw, 2);
 % Amount_of_file = 5;
@@ -103,18 +119,30 @@ function Drawing(V_raw, I_raw, Discontinuity, n)
 %   plot(V_raw(:, ii), I_raw(:, ii), 'k')
 % end
 % figure
-jj = length(Discontinuity);
-if n < inf
-    semilogy(V_raw(:, n), abs(I_raw(:, n)), 'k')
+jj = size(I_raw, 2);
+if n <= jj
+    if (contains(Axis_type, 'Log'))
+        semilogy(V_raw(:, n), abs(I_raw(:, n)), 'k')
+    elseif (contains(Axis_type, 'Linear'))
+        plot(V_raw(:, n), abs(I_raw(:, n)), 'k')
+    else
+        error('参数 4 错误')
+    end
     hold on
     scatter(V_raw(Discontinuity(n), n), abs(I_raw(Discontinuity(n), n)), 'r')
 else
-    semilogy(V_raw(:, 1), abs(I_raw(:, 1)), 'k')
-    hold on
-    for ii =2:jj
-        semilogy(V_raw(:, ii), abs(I_raw(:, ii)), 'k')
+    if (contains(Axis_type, 'Log'))
+        semilogy(V_raw(:, 1), abs(I_raw(:, 1)), 'k')
+    elseif (contains(Axis_type, 'Linear'))
+        plot(V_raw(:, 1), abs(I_raw(:, 1)), 'k')
+    else
+        error('参数 4 错误')
     end
-    for ii =1:jj
+    hold on
+    for ii = 2:jj
+        plot(V_raw(:, ii), abs(I_raw(:, ii)), 'k')
+    end
+    for ii = 1:jj
         scatter(V_raw(Discontinuity(ii), ii), abs(I_raw(Discontinuity(ii), ii)), 'r')
     end
 end
@@ -140,11 +168,13 @@ for ii = 1:Amount_of_file
         if jj == n
             if contains(Options, 'Delete')
                 filename(ii, :) = strrep(filename(ii, :),'SET','set');
-                Discontinuity(ii) = [];
                 save([foldername '\filename.mat'], 'filename')
+            elseif contains(Options, 'Modify')
+                Voltage = input('输入突变点（V）');
+                Voltage_Change = input('输入突变点（V）');
+                Discontinuity(ii) = round(Voltage/Voltage_Change);
                 save([foldername '\Discontinuity.mat'], 'Discontinuity')
             end
-            
         end
     end
 end
