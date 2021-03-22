@@ -13,9 +13,13 @@
 % [I_raw, V_raw, Discontinuity] = main('foldername', 'SET'); % 仅导出原始数据
 % main('foldername', 'ALL', 7, 'Linear') % 纵坐标以线性模式画出所有数据中第 7 组数据
 % main('foldername', 'SET', 6, 'Delete') % 删除 SET过程 数据中第 6 组数据
+% main('foldername', 'RESET', 4, 'Modify') % 修改第 4 次 RESET过程 的突变电压
 
 % datetime('20210318-211027', 'InputFormat', 'yyyyMMdd-HHmmss')
-
+%% 未完成
+% 数据长度自适应
+% 电压变化量自适应
+% 异常电压变化量报警
 %%
 function [varargout] = main(foldername, varargin)
 %% 检查参数
