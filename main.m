@@ -1,43 +1,36 @@
-% 参数：数据文件夹名称 过程 画图选项
+% 参数：数据文件夹名称 过程 画图选项 选项
 % 参数说明：
 %     过程 -- ALL 所有
 %             SET 过程
 %             RESET 过程
-%     画图选项 -- 1-9999 第 n 个数据图像
-%                inf 全部
+%     数据选择 -- 1-9999 第 n 个数据
+%                 inf 全部（仅画图）
+%     选项 -- Delete 删除选择的数据
+%
 %% 使用方法
 % [I_raw, V_raw, Discontinuity] = main('foldername', 'SET'); % 仅导出原始数据
-% main('foldername', 'ALL', 1)
-% main('20210318', 1, 0);
+% main('foldername', 'ALL', 7) % 画出所有数据中第 7 组数据
+% main('foldername', 'SET', 6, 'Delete') % 删除 SET过程 数据中第 6 组数据
 
 % datetime('20210318-211027', 'InputFormat', 'yyyyMMdd-HHmmss')
 
 %%
 function [varargout] = main(foldername, varargin)
+%% 检查参数
 if nargin < 2
     error(message('MATLAB:narginchk:notEnoughInputs'));
-elseif nargin > 4
+elseif nargin > 6
     error(message('MATLAB:narginchk:tooManyInputs'));
-end
-
-%% 查找文件列表
-if exist([foldername foldername(end-8:end) '.mat'], 'file')
-    load([foldername foldername(end-8:end) '.mat'], 'filename')
-else
-    main_foldername = pwd;
-    cd(foldername)
-    filename = ls;
-    filename = filename(3:end, :);
-    cd(main_foldername)
-    save([foldername foldername(end-8:end) '.mat'], 'filename')
 end
 %% 调用功能
 switch nargin
     case 2
-        [I_raw, V_raw, Discontinuity] = raed_raw(foldername, filename, varargin{1});
+        [I_raw, V_raw, Discontinuity] = raed_raw(foldername, varargin{1});
     case 3
-        [I_raw, V_raw, Discontinuity] = raed_raw(foldername, filename, varargin{1});
+        [I_raw, V_raw, Discontinuity] = raed_raw(foldername, varargin{1});
         Drawing(V_raw, I_raw, Discontinuity, varargin{2})
+    otherwise
+        Edit_data(foldername, varargin{1}, varargin{2}, varargin{3})
 end
 if nargout
     varargout{1} = I_raw;
@@ -47,7 +40,18 @@ end
 end
 
 % 读取原始数据
-function [I_raw, V_raw, Discontinuity] = raed_raw(foldername, filename, Process)
+function [I_raw, V_raw, Discontinuity] = raed_raw(foldername, Process)
+%% 查找文件列表
+if exist([foldername '\filename.mat'], 'file')
+    load([foldername '\filename.mat'], 'filename')
+else
+    main_foldername = pwd;
+    cd(foldername)
+    filename = ls;
+    filename = filename(3:end, :);
+    cd(main_foldername)
+    save([foldername '\filename.mat'], 'filename')
+end
 %% 读取原始数据
 Amount_of_file = size(filename, 1);
 Max_amount_of_data = 2000;
@@ -75,13 +79,18 @@ end
 V_raw = V_raw(1:Max_amount_of_data, 1:jj);
 I_raw = I_raw(1:Max_amount_of_data, 1:jj);
 %% 寻找突变点
-cache = I_raw;
-for ii =1:jj
-    x = find(cache(:, ii) == inf);
-    cache(x, ii) = cache(x(1) - 1, ii);
+if exist([foldername '\Discontinuity.mat'], 'file')
+    load([foldername '\Discontinuity.mat'], 'Discontinuity')
+else
+    cache = I_raw;
+    for ii =1:jj
+        x = find(cache(:, ii) == inf);
+        cache(x, ii) = cache(x(1) - 1, ii);
+    end
+    data = abs(diff(cache));
+    [~, Discontinuity] = max(data);
+    save([foldername '\Discontinuity.mat'], 'Discontinuity')
 end
-data = abs(diff(cache));
-[~, Discontinuity] = max(data);
 end
 
 function Drawing(V_raw, I_raw, Discontinuity, n)
@@ -112,6 +121,34 @@ end
 hold off
 end
 
+function Edit_data(foldername, Process, n, Options)
+%%
+if exist([foldername '\filename.mat'], 'file') && exist([foldername '\Discontinuity.mat'], 'file')
+    load([foldername '\filename.mat'], 'filename')
+    load([foldername '\Discontinuity.mat'], 'Discontinuity')
+else
+    error('未进行数据导出');
+end
+Amount_of_file = size(filename, 1);
+if contains(Process, 'ALL')
+    Process = '';
+end
+jj = 0;
+for ii = 1:Amount_of_file
+    if contains(filename(ii, :), ['-' Process])
+        jj = jj + 1;
+        if jj == n
+            if contains(Options, 'Delete')
+                filename(ii, :) = strrep(filename(ii, :),'SET','set');
+                Discontinuity(ii) = [];
+                save([foldername '\filename.mat'], 'filename')
+                save([foldername '\Discontinuity.mat'], 'Discontinuity')
+            end
+            
+        end
+    end
+end
+end
 
 function [times, Voltage, Current] = importfile(filename, dataLines)
 %IMPORTFILE 从文本文件中导入数据
@@ -122,7 +159,7 @@ function [times, Voltage, Current] = importfile(filename, dataLines)
 %  FILENAME 中的数据。对于不连续的行间隔，请将 DATALINES 指定为正整数标量或 N×2 正整数标量数组。
 %
 %  示例:
-%  [time, Voltage, Current] = importfile("C:\Users\hyx3179\Documents\MATLAB\20210319-183105---SET.csv", [1, Inf]);
+%  [time, Voltage, Current] = importfile("FILENAME", [1, Inf]);
 %
 %  另请参阅 READTABLE。
 %
