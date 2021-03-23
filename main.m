@@ -20,6 +20,7 @@
 % 数据长度自适应
 % 电压变化量自适应
 % 异常电压变化量报警
+% 以.mat 格式存储数据
 %%
 function [varargout] = main(foldername, varargin)
 %% 检查参数
@@ -81,19 +82,19 @@ end
 
 V_raw = zeros(Max_amount_of_data, Amount_of_file);
 I_raw = zeros(Max_amount_of_data, Amount_of_file);
-File_Number = zeros(Amount_of_file);
+File_Number = zeros(Amount_of_file, 1);
 jj = 0;
 for ii = 1:Amount_of_file
     if contains(filename(ii, :), ['-' Process]) && ~(contains(filename(ii, :), 'set'))
         [~, V, I] = importfile([foldername '\' filename(ii, :)]);
         jj = jj + 1;
         File_Number(jj) = ii;
-        V_raw(:, jj) = [V(1:round(length(V)/2)) ; ...
-            ones(Max_amount_of_data-1-length(V), 1)*inf ; ...
-            V(round(length(V)/2:end))];
-        I_raw(:, jj) = [I(1:round(length(I)/2)) ; ...
-            ones(Max_amount_of_data-1-length(I), 1)*inf ; ...
-            I(round(length(I)/2:end))];
+        V_raw(:, jj) = [V(1:round(length(V) / 2)); ...
+            ones(Max_amount_of_data - 1 - length(V), 1) * inf; ...
+            V(round(length(V) / 2) :end)];
+        I_raw(:, jj) = [I(1:round(length(I) / 2)); ...
+            ones(Max_amount_of_data - 1 - length(I), 1)* inf; ...
+            I(round(length(I) / 2) :end)];
     end
 end
 V_raw = V_raw(1:Max_amount_of_data, 1:jj);
@@ -102,7 +103,7 @@ File_Number = File_Number(1:jj);
 if ~(exist('Discontinuity', 'var'))
     %% 寻找突变点
     cache = I_raw;
-    for ii =1:jj
+    for ii = 1:jj
         x = find(cache(:, ii) == inf);
         cache(x, ii) = cache(x(1) - 1, ii);
     end
@@ -123,32 +124,20 @@ function Drawing(V_raw, I_raw, Discontinuity, n, Axis_type)
 %   plot(V_raw(:, ii), I_raw(:, ii), 'k')
 % end
 % figure
-jj = size(I_raw, 2);
-if n <= jj
-    if (contains(Axis_type, 'Log'))
-        semilogy(V_raw(:, n), abs(I_raw(:, n)), 'k')
-    elseif (contains(Axis_type, 'Linear'))
-        plot(V_raw(:, n), abs(I_raw(:, n)), 'k')
-    else
+cla('reset')
+switch Axis_type
+    case 'Log'
+        semilogy( 0, 0, 'k')
+    case 'Linear'
+    otherwise
         error('参数 4 错误')
-    end
-    hold on
-    scatter(V_raw(Discontinuity(n), n), abs(I_raw(Discontinuity(n), n)), 'r')
-else
-    if (contains(Axis_type, 'Log'))
-        semilogy(V_raw(:, 1), abs(I_raw(:, 1)), 'k')
-    elseif (contains(Axis_type, 'Linear'))
-        plot(V_raw(:, 1), abs(I_raw(:, 1)), 'k')
-    else
-        error('参数 4 错误')
-    end
-    hold on
-    for ii = 2:jj
-        plot(V_raw(:, ii), abs(I_raw(:, ii)), 'k')
-    end
-    for ii = 1:jj
-        scatter(V_raw(Discontinuity(ii), ii), abs(I_raw(Discontinuity(ii), ii)), 'r')
-    end
+end
+hold on
+for ii = n
+    plot(V_raw(:, ii), abs(I_raw(:, ii)), 'k')
+end
+for ii = n
+    scatter(V_raw(Discontinuity(ii), ii), abs(I_raw(Discontinuity(ii), ii)), 'r')
 end
 hold off
 end
@@ -171,12 +160,12 @@ for ii = 1:Amount_of_file
         jj = jj + 1;
         if jj == n
             if contains(Options, 'Delete')
-                filename(ii, :) = strrep(filename(ii, :),'SET','set');
+                filename(ii, :) = strrep(filename(ii, :), 'SET', 'set');
                 save([foldername '\filename.mat'], 'filename')
             elseif contains(Options, 'Modify')
                 Voltage = input('输入突变点（V）');
                 Voltage_Change = input('输入突变点（V）');
-                Discontinuity(ii) = round(Voltage/Voltage_Change);
+                Discontinuity(ii) = round(Voltage / Voltage_Change);
                 save([foldername '\Discontinuity.mat'], 'Discontinuity')
             end
         end
@@ -184,7 +173,7 @@ for ii = 1:Amount_of_file
 end
 end
 
-function [times, Voltage, Current] = importfile(filename, dataLines)
+function[Time, Voltage, Current] = importfile(filename, dataLines)
 %IMPORTFILE 从文本文件中导入数据
 %  [TIME, VOLTAGE, CURRENT] = IMPORTFILE(FILENAME)读取文本文件 FILENAME
 %  中默认选定范围的数据。  以列向量形式返回数据。
@@ -225,7 +214,7 @@ opts.EmptyLineRule = "read";
 tbl = readtable(filename, opts);
 
 %% 转换为输出类型
-times = tbl.time;
+Time = tbl.time;
 Voltage = tbl.Voltage;
 Current = tbl.Current;
 end
