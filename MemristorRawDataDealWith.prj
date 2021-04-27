@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="2010733969" file="D:\Workspace\MATLAB\Memristor-Raw-Data-Deal-With\MemristorRawDataDealWith.prj" location="D:\Workspace\MATLAB\Memristor-Raw-Data-Deal-With" name="MemristorRawDataDealWith" preferred-package-location="D:\Workspace\MATLAB\Memristor-Raw-Data-Deal-With\MemristorRawDataDealWith\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="1235866101" file="D:\Workspace\MATLAB\Memristor-Raw-Data-Deal-With\MemristorRawDataDealWith.prj" location="D:\Workspace\MATLAB\Memristor-Raw-Data-Deal-With" name="MemristorRawDataDealWith" preferred-package-location="D:\Workspace\MATLAB\Memristor-Raw-Data-Deal-With\MemristorRawDataDealWith\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>MemristorRawDataDealWith</param.appname>
     <param.icon>${PROJECT_ROOT}\MemristorRawDataDealWith_resources\icon.ico</param.icon>
     <param.icons>
@@ -8,13 +8,13 @@
       <file>${PROJECT_ROOT}\MemristorRawDataDealWith_resources\icon_24.png</file>
       <file>${PROJECT_ROOT}\MemristorRawDataDealWith_resources\icon_16.png</file>
     </param.icons>
-    <param.version>1.6</param.version>
+    <param.version>2.0</param.version>
     <param.authnamewatermark>hyx3179</param.authnamewatermark>
     <param.email>hyx3179@gmail.com</param.email>
     <param.company />
     <param.summary />
     <param.description />
-    <param.screenshot>${PROJECT_ROOT}\MemristorRawDataDealWith_resources\screenshot.png</param.screenshot>
+    <param.screenshot>${PROJECT_ROOT}\MemristorRawDataDealWith_resources\screenshot.jpg</param.screenshot>
     <param.guid />
     <param.installpath.string>\MemristorRawDataDealWith\</param.installpath.string>
     <param.installpath.combo>option.installpath.programfiles</param.installpath.combo>
@@ -71,13 +71,12 @@
       <param.no.mcr.name />
       <param.windows.command.prompt />
       <param.create.log />
-      <param.log.file />
       <param.native.matlab />
       <param.checkbox />
       <param.example />
     </unset>
     <fileset.main>
-      <file>${PROJECT_ROOT}\Memristor_Raw_Data_Deal_With.mlapp</file>
+      <file>${PROJECT_ROOT}\MemristorRawDataDealWith.mlapp</file>
     </fileset.main>
     <fileset.resources />
     <fileset.package />
