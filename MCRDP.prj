@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="689114317" file="D:\Workspace\MATLAB\MCRDP\MCRDP.prj" location="D:\Workspace\MATLAB\MCRDP" name="MCRDP" preferred-package-location="D:\Workspace\MATLAB\MCRDP\MCRDP\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="3864138480" file="D:\Workspace\MATLAB\MCRDP\MCRDP.prj" location="D:\Workspace\MATLAB\MCRDP" name="MCRDP" preferred-package-location="D:\Workspace\MATLAB\MCRDP\MCRDP\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>MCRDP</param.appname>
     <param.icon>${PROJECT_ROOT}\MCRDP_resources\icon.ico</param.icon>
     <param.icons>
